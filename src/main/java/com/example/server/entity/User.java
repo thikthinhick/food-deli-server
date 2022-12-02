@@ -1,21 +1,21 @@
 package com.example.server.entity;
 
 import javax.persistence.*;
-
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+
+
+import java.io.Serializable;
 
 @Entity
 @Table(name = "user")
 @Data // lombok
-public class User {
+public class User implements Serializable {
     public enum Role{
         ROLE_ADMIN,
         ROLE_USER
     }
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "user_id")
     private Long id;
     @Column(nullable = false, unique = true)

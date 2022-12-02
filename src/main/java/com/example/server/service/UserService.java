@@ -3,9 +3,11 @@ package com.example.server.service;
 import com.example.server.entity.User;
 import com.example.server.model.CustomUserDetails;
 import com.example.server.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -20,15 +22,14 @@ public class UserService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username);
-        if (user == null) {
-            throw new UsernameNotFoundException(username);
-        }
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User Not Found with username: " + username));
+
         return new CustomUserDetails(user);
     }
-    public UserDetails loadUserById(Long userId) {
-        Optional<User> user = userRepository.findById(userId);
-        if(user.isPresent()) return new CustomUserDetails(user.get());
-        else throw new NullPointerException();
+    public void updatePassword(String username, String password) {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("User Not Found with email: " + username));
+        user.setPassword(password);
+        userRepository.save(user);
     }
 }

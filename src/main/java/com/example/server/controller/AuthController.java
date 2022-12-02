@@ -3,10 +3,11 @@ package com.example.server.controller;
 import com.example.server.entity.User;
 import com.example.server.jwt.JwtTokenProvider;
 import com.example.server.model.CustomUserDetails;
+import com.example.server.repository.OtpRepository;
 import com.example.server.repository.TokenRepository;
 import com.example.server.repository.UserRepository;
 import com.example.server.service.EmailSender;
-import lombok.AllArgsConstructor;
+import com.example.server.service.UserService;
 import lombok.Data;
 import lombok.ToString;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,17 +16,18 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Repository;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.UUID;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/auth")
 class AuthController{
 
     private final AuthenticationManager authenticationManager;
@@ -36,7 +38,11 @@ class AuthController{
     @Autowired
     private TokenRepository tokenRepository;
     @Autowired
+    private OtpRepository otpRepository;
+    @Autowired
     private EmailSender emailSender;
+    @Autowired
+    private UserService userService;
     public AuthController(AuthenticationManager authenticationManager, JwtTokenProvider tokenProvider, UserRepository userRepository) {
         this.authenticationManager = authenticationManager;
         this.tokenProvider = tokenProvider;
@@ -82,7 +88,7 @@ class AuthController{
                     .badRequest()
                     .body("email không tồn tại!");
         }
-        String otp = tokenRepository.generateOTP(formRequest.getUsername());
+        String otp = otpRepository.generateOTP(formRequest.getUsername());
         try {
             emailSender.sendMail(formRequest.getUsername(), "RESET PASSWORD", otp);
         } catch (MessagingException e) {
@@ -92,6 +98,65 @@ class AuthController{
         }
         return ResponseEntity.ok("Kiểm tra email để lấy otp!");
     }
+
+    @PostMapping("/check_otp")
+    public ResponseEntity<?> resetPassword(@RequestBody FormRequest formRequest) {
+        try {
+            String otp = otpRepository.getState(formRequest.getUsername());
+            if(otp.equals(formRequest.getOtp())) {
+                otpRepository.delete(formRequest.getUsername());
+                String token = tokenRepository.generateOTP(formRequest.getUsername());
+                return ResponseEntity.ok(token);
+            }
+            else return ResponseEntity.badRequest().body("otp không chính xác!");
+        }catch (NullPointerException e) {
+            return ResponseEntity.badRequest().body("otp hết hạn!");
+        }
+    }
+    @PostMapping("/reset_password")
+    public ResponseEntity<?> resetPassword(@RequestBody FormRequest formRequest, HttpServletRequest request) {
+        String tokenSend = request.getHeader("reset_password_token");
+        if(tokenSend == null) return ResponseEntity.status(401).body("Bạn không thể reset password");
+        try{
+            String token = tokenRepository.getState(formRequest.getUsername());
+            if(token.equals(tokenSend)) {
+                tokenRepository.delete(formRequest.getUsername());
+                userService.updatePassword(formRequest.getUsername(), formRequest.getPassword());
+                Authentication authentication = authenticationManager.authenticate(
+                        new UsernamePasswordAuthenticationToken(
+                                formRequest.getUsername(),
+                                formRequest.getPassword()
+                        )
+                );
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+                return ResponseEntity.ok(tokenProvider.generateToken((CustomUserDetails) authentication.getPrincipal()));
+            }
+            else {
+                return ResponseEntity.badRequest().body("token không chính xác!");
+            }
+        }catch (NullPointerException e) {
+            return ResponseEntity.badRequest().body("token hết hạn!");
+        }
+    }
+    @PostMapping("/change_password")
+    public ResponseEntity<?> responseEntity(@RequestBody FormRequest formRequest) {
+        User user = userRepository
+                .findByUsername(formRequest.getUsername())
+                .orElseThrow(() -> new UsernameNotFoundException("User Not Found with email: " + formRequest.getUsername()));
+
+        if(encoder.matches(formRequest.getOldPassword(), user.getPassword())) {
+            userService.updatePassword(formRequest.getUsername(), encoder.encode(formRequest.getPassword()));
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            formRequest.getUsername(),
+                            formRequest.getPassword()
+                    )
+            );
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            return ResponseEntity.ok(tokenProvider.generateToken((CustomUserDetails) authentication.getPrincipal()));
+        }
+        else return ResponseEntity.badRequest().body("Tài khoản hoặc mật khẩu nhập sai!");
+    }
 }
 @Data
 @ToString
@@ -99,4 +164,6 @@ class AuthController{
 class FormRequest{
     private String username;
     private String password;
+    private String oldPassword;
+    private String otp;
 }

@@ -8,6 +8,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Base64;
+
 @SpringBootApplication
 public class ServerApplication implements CommandLineRunner {
 
@@ -22,8 +24,8 @@ public class ServerApplication implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         User user = new User();
-        user.setUsername("loda");
-        user.setPassword(passwordEncoder.encode("loda"));
+        user.setUsername("trumle2k1@gmail.com");
+        user.setPassword(passwordEncoder.encode("chuong"));
         userRepository.save(user);
         System.out.println(userRepository.findAll());
     }
