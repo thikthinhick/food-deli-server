@@ -2,6 +2,7 @@ package com.example.server.entity;
 
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
@@ -23,6 +24,7 @@ public class Food implements Serializable {
     private String description;
     private Long price;
     private Long oldPrice;
+
     @ManyToMany
     @JoinTable(name = "food_category",
             joinColumns = @JoinColumn(name = "food_id"),

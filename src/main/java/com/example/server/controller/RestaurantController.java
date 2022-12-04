@@ -6,6 +6,7 @@ import com.example.server.repository.FoodRepository;
 import com.example.server.repository.RestaurantRepository;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,8 +34,9 @@ public class RestaurantController {
     }
 
     @PostMapping
-    public void insertRestaurant(@RequestBody Restaurant restaurant) {
+    public ResponseEntity<?> insertRestaurant(@RequestBody Restaurant restaurant) {
         restaurantRepository.save(restaurant);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PostMapping("/{restaurantId}/food/{foodId}")

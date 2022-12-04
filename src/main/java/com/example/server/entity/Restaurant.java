@@ -22,6 +22,10 @@ public class Restaurant implements Serializable {
     @OneToMany(mappedBy = "restaurant")
     @JsonManagedReference
     private List<Food> foods = new ArrayList<>();
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "address_id", referencedColumnName = "id")
+    private Address address;
     public void addFood(Food food) {
         this.foods.add(food);
         food.setRestaurant(this);
