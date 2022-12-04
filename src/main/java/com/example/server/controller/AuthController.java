@@ -1,5 +1,6 @@
 package com.example.server.controller;
 
+import com.example.server.entity.Cart;
 import com.example.server.entity.User;
 import com.example.server.jwt.JwtTokenProvider;
 import com.example.server.model.CustomUserDetails;
@@ -18,13 +19,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 @RestController
 @RequestMapping("/auth")
@@ -47,6 +46,10 @@ class AuthController{
         this.authenticationManager = authenticationManager;
         this.tokenProvider = tokenProvider;
         this.userRepository = userRepository;
+    }
+    @GetMapping("/all")
+    public List<Cart> getUser() {
+        return userRepository.findAll().get(0).getCarts();
     }
 
     @PostMapping("/login")

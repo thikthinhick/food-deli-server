@@ -1,5 +1,7 @@
 package com.example.server.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Data;
@@ -20,7 +22,7 @@ public class Restaurant implements Serializable {
     private String description;
     private String backgroundImage;
     @OneToMany(mappedBy = "restaurant")
-    @JsonManagedReference
+    @JsonIgnoreProperties("restaurant")
     private List<Food> foods = new ArrayList<>();
 
     @OneToOne(cascade = CascadeType.ALL)

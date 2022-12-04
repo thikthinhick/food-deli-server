@@ -1,11 +1,8 @@
 package com.example.server.entity;
-
-
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
-
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -15,6 +12,7 @@ import java.util.Set;
 
 @Entity
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Food implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -32,9 +30,12 @@ public class Food implements Serializable {
     @JsonIgnoreProperties("foods")
     private List<Category> categories = new ArrayList<>();
     @ManyToOne
-    @JsonBackReference
-    @JoinColumn(name = "restaurant_id", nullable = false)
+    @JoinColumn(name = "restaurant_id")
+    @JsonIgnoreProperties("foods")
     private Restaurant restaurant;
     @OneToMany(mappedBy = "food")
     private Set<Image> images = new HashSet<>();
+    @OneToMany(mappedBy = "food", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Cart> carts = new ArrayList<>();
 }

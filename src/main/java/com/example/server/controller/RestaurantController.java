@@ -2,6 +2,8 @@ package com.example.server.controller;
 
 import com.example.server.entity.Food;
 import com.example.server.entity.Restaurant;
+import com.example.server.entity.User;
+import com.example.server.exception.ResourceNotFoundException;
 import com.example.server.repository.FoodRepository;
 import com.example.server.repository.RestaurantRepository;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -20,17 +22,16 @@ public class RestaurantController {
     @Autowired
     private FoodRepository foodRepository;
 
-    @GetMapping("/all")
-    public ResponseEntity<?> getAll() {
-        return ResponseEntity.ok(restaurantRepository.findAll());
-    }
 
     @GetMapping
-    public ResponseEntity<?> findRestaurantById(@RequestParam("id") Long id) {
-        Restaurant restaurant = restaurantRepository
-                .findById(id)
-                .orElseThrow(() -> new NullPointerException("not find restaurant!"));
-        return ResponseEntity.ok(restaurant);
+    public ResponseEntity<?> findRestaurantById(@RequestParam(name = "id", required = false) Long id) {
+        if(id != null) {
+            Restaurant restaurant = restaurantRepository
+                    .findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("not find restaurant!"));
+            return ResponseEntity.ok(restaurant);
+        }
+        return ResponseEntity.ok(restaurantRepository.findAll());
     }
 
     @PostMapping
