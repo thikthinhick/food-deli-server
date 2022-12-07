@@ -2,17 +2,16 @@ package com.example.server.controller;
 
 import com.example.server.entity.Food;
 import com.example.server.entity.Restaurant;
-import com.example.server.entity.User;
 import com.example.server.exception.ResourceNotFoundException;
 import com.example.server.repository.FoodRepository;
 import com.example.server.repository.RestaurantRepository;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("api/restaurant")
@@ -22,7 +21,6 @@ public class RestaurantController {
     @Autowired
     private FoodRepository foodRepository;
 
-
     @GetMapping
     public ResponseEntity<?> findRestaurantById(@RequestParam(name = "id", required = false) Long id) {
         if(id != null) {
@@ -31,7 +29,10 @@ public class RestaurantController {
                     .orElseThrow(() -> new ResourceNotFoundException("not find restaurant!"));
             return ResponseEntity.ok(restaurant);
         }
-        return ResponseEntity.ok(restaurantRepository.findAll());
+
+        return ResponseEntity.ok(restaurantRepository.findAll()
+                .stream().map(element -> {element.setFoods(null);
+                    return element;}).collect(Collectors.toList()));
     }
 
     @PostMapping
@@ -42,8 +43,8 @@ public class RestaurantController {
 
     @PostMapping("/{restaurantId}/food/{foodId}")
     public void addFoodToRestaurant(@PathVariable("restaurantId") Long restaurantId, @PathVariable("foodId") Long foodId) {
-        Food food = foodRepository.findById(foodId).orElseThrow(() -> new NullPointerException("Not find food"));
-        Restaurant restaurant = restaurantRepository.findById(restaurantId).orElseThrow(() -> new NullPointerException("Not find restaurant"));
+        Food food = foodRepository.findById(foodId).orElseThrow(() -> new ResourceNotFoundException("Not find food"));
+        Restaurant restaurant = restaurantRepository.findById(restaurantId).orElseThrow(() -> new ResourceNotFoundException("Not find restaurant"));
         restaurant.addFood(food);
         restaurantRepository.save(restaurant);
     }

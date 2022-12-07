@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Set;
 
 @Entity
-@Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Food implements Serializable {
     @Id
@@ -33,9 +32,89 @@ public class Food implements Serializable {
     @JoinColumn(name = "restaurant_id")
     @JsonIgnoreProperties("foods")
     private Restaurant restaurant;
+
     @OneToMany(mappedBy = "food")
     private Set<Image> images = new HashSet<>();
+
     @OneToMany(mappedBy = "food", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Cart> carts = new ArrayList<>();
+
+    private void addCategory(Category category) {
+        this.categories.add(category);
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public Long getPrice() {
+        return price;
+    }
+
+    public void setPrice(Long price) {
+        this.price = price;
+    }
+
+    public Long getOldPrice() {
+        return oldPrice;
+    }
+
+    public void setOldPrice(Long oldPrice) {
+        this.oldPrice = oldPrice;
+    }
+
+    public List<Category> getCategories() {
+        return categories;
+    }
+
+    public void setCategories(List<Category> categories) {
+        this.categories = categories;
+    }
+
+    public Restaurant getRestaurant() {
+        return restaurant;
+    }
+
+    public void setRestaurant(Restaurant restaurant) {
+        this.restaurant = restaurant;
+    }
+
+    public Set<Image> getImages() {
+        return images;
+    }
+
+    public void setImages(Set<Image> images) {
+        this.images = images;
+    }
+
+    public List<Cart> getCarts() {
+        return carts;
+    }
+
+    public void setCarts(List<Cart> carts) {
+        this.carts = carts;
+    }
+
+
 }

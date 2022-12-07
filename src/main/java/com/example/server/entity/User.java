@@ -2,9 +2,6 @@ package com.example.server.entity;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -12,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class User implements Serializable {
     public enum Role {
@@ -33,6 +29,8 @@ public class User implements Serializable {
     private List<Address> addresses = new ArrayList<>();
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Cart> carts = new ArrayList<>();
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Order> orders = new ArrayList<>();
     public void addAddress(Address address) {
         this.addresses.add(address);
         address.setUser(this);
@@ -41,5 +39,60 @@ public class User implements Serializable {
         Address address = addresses.stream().filter(element -> element.getId() == addressId).findFirst().orElse(null);
         if(address != null)
             this.getAddresses().remove(address);
+    }
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
+    public List<Address> getAddresses() {
+        return addresses;
+    }
+
+    public void setAddresses(List<Address> addresses) {
+        this.addresses = addresses;
+    }
+
+    public List<Cart> getCarts() {
+        return carts;
+    }
+
+    public void setCarts(List<Cart> carts) {
+        this.carts = carts;
     }
 }
