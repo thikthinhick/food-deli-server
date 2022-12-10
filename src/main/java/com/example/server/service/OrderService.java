@@ -1,51 +1,36 @@
 package com.example.server.service;
 
-import com.example.server.entity.*;
+import com.example.server.entity.Order;
+import com.example.server.entity.OrderStatus;
+import com.example.server.entity.Status;
 import com.example.server.exception.ResourceNotFoundException;
-import com.example.server.repository.CartRepository;
-import com.example.server.repository.OrderFoodRepository;
 import com.example.server.repository.OrderRepository;
-import com.example.server.repository.UserRepository;
+import com.example.server.repository.OrderStatusRepository;
+import com.example.server.repository.StatusRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.sql.Timestamp;
 
 @Service
 public class OrderService {
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
     private OrderRepository orderRepository;
-    @Autowired
-    private OrderFoodRepository orderFoodRepository;
-    @Autowired
-    private CartRepository cartRepository;
-    @Transactional
-    public void addCartToOrder(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("Not find user"));
 
-        List<Cart> carts = user.getCarts();
-        Map<Long, List<Cart>> cartGroup =
-                carts.stream().collect(Collectors.groupingBy(w -> w.getFood().getRestaurant().getId()));
-        Order order = new Order();
-        order.setCode(UUID.randomUUID().toString());
-        order.setUser(user);
-        orderRepository.save(order);
-        Set<Long> keys = cartGroup.keySet();
-        for(Long key : keys) {
-            List<OrderFood> orderFoods = new ArrayList<>();
-            for(Cart cart : cartGroup.get(key)) {
-                OrderFood orderFood = new OrderFood();
-                orderFood.setOrder(order);
-                orderFood.setFood(cart.getFood());
-                orderFood.setAmount(cart.getAmount());
-                orderFoods.add(orderFood);
-            }
-            orderFoodRepository.saveAll(orderFoods);
-        }
-        cartRepository.deleteByUserId(userId);
+    @Autowired
+    private StatusRepository statusRepository;
+
+    @Autowired
+    private OrderStatusRepository orderStatusRepository;
+
+    public void changeStatusOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new ResourceNotFoundException("Not find orrder"));
+        OrderStatus orderStatus = new OrderStatus();
+        orderStatus.setOrder(order);
+        Long statusId = order.getStatuses().get(order.getStatuses().size() - 1).getStatus().getId();
+        Status status = statusRepository.findById(statusId + 1).orElseThrow(() -> new ResourceNotFoundException("not find"));
+        orderStatus.setStatus(status);
+        orderStatus.setTime(new Timestamp(System.currentTimeMillis()));
+        orderStatusRepository.save(orderStatus);
     }
 }

@@ -1,7 +1,8 @@
 package com.example.server.controller;
 
-import com.example.server.entity.Cart;
+import com.example.server.conmon.AppCommon;
 import com.example.server.entity.User;
+import com.example.server.exception.ResourceNotFoundException;
 import com.example.server.jwt.JwtTokenProvider;
 import com.example.server.model.CustomUserDetails;
 import com.example.server.repository.OtpRepository;
@@ -9,6 +10,8 @@ import com.example.server.repository.TokenRepository;
 import com.example.server.repository.UserRepository;
 import com.example.server.service.EmailSender;
 import com.example.server.service.UserService;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.ToString;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,11 +22,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
 
 @RestController
 @RequestMapping("/auth")
@@ -47,10 +52,6 @@ class AuthController{
         this.tokenProvider = tokenProvider;
         this.userRepository = userRepository;
     }
-    @GetMapping("/all")
-    public List<Cart> getUser() {
-        return userRepository.findAll().get(0).getCarts();
-    }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody FormRequest formRequest) {
@@ -61,7 +62,10 @@ class AuthController{
                 )
         );
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        return ResponseEntity.ok(tokenProvider.generateToken((CustomUserDetails) authentication.getPrincipal()));
+        User user = userRepository.findByUsername(formRequest.getUsername()).orElseThrow(() -> new ResourceNotFoundException("khong tim thay ussername"));
+        String token = tokenProvider.generateToken((CustomUserDetails) authentication.getPrincipal());
+        FormResponse formResponse = new FormResponse(token, user.getFullName(), user.getUsername(), user.getId(), user.getThumbnail());
+        return ResponseEntity.ok(formResponse);
     }
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody FormRequest formRequest) {
@@ -73,6 +77,8 @@ class AuthController{
         User user = new User();
         user.setUsername(formRequest.getUsername());
         user.setPassword(encoder.encode(formRequest.getPassword()));
+        user.setFullName(AppCommon.randomString(10));
+        user.setThumbnail("https://cdn.iconscout.com/icon/free/png-256/user-avatar-contact-portfolio-personal-portrait-profile-5093.png");
         user.setRole(User.Role.ROLE_USER);
         userRepository.save(user);
         Authentication authentication = authenticationManager.authenticate(
@@ -82,7 +88,10 @@ class AuthController{
                 )
         );
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        return ResponseEntity.ok(tokenProvider.generateToken((CustomUserDetails) authentication.getPrincipal()));
+        User a = userRepository.findByUsername(formRequest.getUsername()).orElseThrow(() -> new ResourceNotFoundException("khong tim thay ussername"));
+        String token = tokenProvider.generateToken((CustomUserDetails) authentication.getPrincipal());
+        FormResponse formResponse = new FormResponse(token, a.getFullName(), a.getUsername(), a.getId(), a.getThumbnail());
+        return ResponseEntity.ok(formResponse);
     }
     @PostMapping("/forgot_password")
     public ResponseEntity<?> forgotPassword(@RequestBody FormRequest formRequest) {
@@ -104,6 +113,7 @@ class AuthController{
 
     @PostMapping("/check_otp")
     public ResponseEntity<?> resetPassword(@RequestBody FormRequest formRequest) {
+        System.out.println(formRequest.getUsername() + formRequest.getOtp());
         try {
             String otp = otpRepository.getState(formRequest.getUsername());
             if(otp.equals(formRequest.getOtp())) {
@@ -124,7 +134,7 @@ class AuthController{
             String token = tokenRepository.getState(formRequest.getUsername());
             if(token.equals(tokenSend)) {
                 tokenRepository.delete(formRequest.getUsername());
-                userService.updatePassword(formRequest.getUsername(), formRequest.getPassword());
+                userService.updatePassword(formRequest.getUsername(), encoder.encode(formRequest.getPassword()));
                 Authentication authentication = authenticationManager.authenticate(
                         new UsernamePasswordAuthenticationToken(
                                 formRequest.getUsername(),
@@ -132,7 +142,10 @@ class AuthController{
                         )
                 );
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                return ResponseEntity.ok(tokenProvider.generateToken((CustomUserDetails) authentication.getPrincipal()));
+                User a = userRepository.findByUsername(formRequest.getUsername()).orElseThrow(() -> new ResourceNotFoundException("khong tim thay ussername"));
+                String x = tokenProvider.generateToken((CustomUserDetails) authentication.getPrincipal());
+                FormResponse formResponse = new FormResponse(x, a.getFullName(), a.getUsername(), a.getId(), a.getThumbnail());
+                return ResponseEntity.ok(formResponse);
             }
             else {
                 return ResponseEntity.badRequest().body("token không chính xác!");
@@ -159,6 +172,16 @@ class AuthController{
             return ResponseEntity.ok(tokenProvider.generateToken((CustomUserDetails) authentication.getPrincipal()));
         }
         else return ResponseEntity.badRequest().body("Tài khoản hoặc mật khẩu nhập sai!");
+    }
+    @Data
+    @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private static class FormResponse{
+        private String accessToken;
+        private String fullName;
+        private String email;
+        private Long userId;
+        private String thumbnail;
     }
 }
 @Data

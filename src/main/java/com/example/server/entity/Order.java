@@ -1,8 +1,7 @@
 package com.example.server.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -10,6 +9,8 @@ import java.util.List;
 
 @Entity
 @Table(name = "orders")
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties("user")
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -17,8 +18,20 @@ public class Order {
     @Column(unique = true)
     private String code;
     @OneToMany(mappedBy = "order")
+    @JsonIgnoreProperties("order")
     private List<OrderFood> orderFoods = new ArrayList<>();
 
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties("order")
+    private List<OrderStatus> statuses = new ArrayList<>();
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+    private String address;
+    private Long price;
+    public Long getId() {
+        return id;
+    }
     public List<OrderFood> getOrderFoods() {
         return orderFoods;
     }
@@ -34,22 +47,6 @@ public class Order {
     public void setUser(User user) {
         this.user = user;
     }
-
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "status_id", referencedColumnName = "id")
-    private Status status;
-
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "address_id", referencedColumnName = "id")
-    private Address address;
-
-    public Long getId() {
-        return id;
-    }
-
     public void setId(Long id) {
         this.id = id;
     }
@@ -62,20 +59,29 @@ public class Order {
         this.code = code;
     }
 
-
-    public Status getStatus() {
-        return status;
+    public List<OrderStatus> getStatuses() {
+        return statuses;
     }
 
-    public void setStatus(Status status) {
-        this.status = status;
+    public void setStatuses(List<OrderStatus> statuses) {
+        this.statuses = statuses;
     }
 
-    public Address getAddress() {
+
+    public Long getPrice() {
+        return price;
+    }
+
+    public void setPrice(Long price) {
+        this.price = price;
+    }
+
+
+    public String getAddress() {
         return address;
     }
 
-    public void setAddress(Address address) {
+    public void setAddress(String address) {
         this.address = address;
     }
 }

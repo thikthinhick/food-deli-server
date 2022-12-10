@@ -2,10 +2,12 @@ package com.example.server.controller;
 
 import com.example.server.entity.Category;
 import com.example.server.entity.Food;
+import com.example.server.entity.Image;
 import com.example.server.exception.ResourceNotFoundException;
 import com.example.server.repository.CategoryRepository;
 import com.example.server.repository.FoodRepository;
 import com.example.server.service.UserService;
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -51,4 +53,15 @@ public class FoodController {
         food.setCategories(categoryList);
         foodRepository.save(food);
     }
+}
+@Data
+class FoodResponse{
+    private Long id;
+    private String name;
+    private String description;
+    private Long price;
+    private Long oldPrice;
+    private Long rate;
+    private String restaurant;
+    List<Image> images;
 }

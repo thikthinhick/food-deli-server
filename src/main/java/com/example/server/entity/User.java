@@ -11,6 +11,14 @@ import java.util.List;
 @Entity
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class User implements Serializable {
+    public String getThumbnail() {
+        return thumbnail;
+    }
+
+    public void setThumbnail(String thumbnail) {
+        this.thumbnail = thumbnail;
+    }
+
     public enum Role {
         ROLE_ADMIN,
         ROLE_USER
@@ -23,23 +31,25 @@ public class User implements Serializable {
     private String username;
     private String fullName;
     private String password;
+    private String thumbnail;
     private Role role;
     @OneToMany(mappedBy = "user")
     @JsonManagedReference
     private List<Address> addresses = new ArrayList<>();
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<Cart> carts = new ArrayList<>();
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Order> orders = new ArrayList<>();
+
     public void addAddress(Address address) {
         this.addresses.add(address);
         address.setUser(this);
     }
+
     public void removeAddress(Long addressId) {
         Address address = addresses.stream().filter(element -> element.getId() == addressId).findFirst().orElse(null);
-        if(address != null)
+        if (address != null)
             this.getAddresses().remove(address);
     }
+
     public Long getId() {
         return id;
     }
@@ -86,13 +96,5 @@ public class User implements Serializable {
 
     public void setAddresses(List<Address> addresses) {
         this.addresses = addresses;
-    }
-
-    public List<Cart> getCarts() {
-        return carts;
-    }
-
-    public void setCarts(List<Cart> carts) {
-        this.carts = carts;
     }
 }

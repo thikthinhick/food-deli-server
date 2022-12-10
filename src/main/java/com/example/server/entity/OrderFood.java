@@ -1,11 +1,13 @@
 package com.example.server.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
 import javax.persistence.*;
 
 @Entity
 @Data
+@JsonIgnoreProperties("order")
 public class OrderFood {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

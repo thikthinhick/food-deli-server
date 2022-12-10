@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RestController
@@ -23,7 +24,7 @@ public class RestaurantController {
 
     @GetMapping
     public ResponseEntity<?> findRestaurantById(@RequestParam(name = "id", required = false) Long id) {
-        if(id != null) {
+        if (id != null) {
             Restaurant restaurant = restaurantRepository
                     .findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException("not find restaurant!"));
@@ -31,8 +32,20 @@ public class RestaurantController {
         }
 
         return ResponseEntity.ok(restaurantRepository.findAll()
-                .stream().map(element -> {element.setFoods(null);
-                    return element;}).collect(Collectors.toList()));
+                .stream().map(element -> {
+                    element.setFoods(null);
+                    element.setReviews(null);
+                    return element;
+                }).collect(Collectors.toList()));
+    }
+
+    @GetMapping("/{restaurantId}/food")
+    public List<Food> getFoodInRestaurant(@PathVariable("restaurantId") Long restaurantId, @RequestParam("food_skip") Long foodId) {
+        Restaurant restaurant = restaurantRepository.findById(restaurantId).orElseThrow(() -> new ResourceNotFoundException("Not find restaurant"));
+        return restaurant.getFoods()
+                .stream().filter(element -> !Objects.equals(element.getId(), foodId))
+                .peek(element -> element.setRestaurant(null)).limit(2).collect(Collectors.toList());
+
     }
 
     @PostMapping

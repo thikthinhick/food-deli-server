@@ -19,7 +19,7 @@ public class Address {
     private String detail;
     private double longitude;
     private double latitude;
-    private boolean active;
+    private Boolean active;
     @ManyToOne
     @JoinColumn(name = "user_id")
     @JsonBackReference

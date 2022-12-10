@@ -1,10 +1,7 @@
 package com.example.server.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import lombok.Data;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -20,9 +17,15 @@ public class Restaurant implements Serializable {
     @Column(columnDefinition = "TEXT")
     private String description;
     private String backgroundImage;
+    private Double rate;
+    private Integer numberRate;
     @OneToMany(mappedBy = "restaurant")
     @JsonIgnoreProperties("restaurant")
     private List<Food> foods = new ArrayList<>();
+
+    @OneToMany(mappedBy = "restaurant")
+    @JsonIgnoreProperties("restaurant")
+    private List<Review> reviews = new ArrayList<>();
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "address_id", referencedColumnName = "id")
@@ -42,6 +45,14 @@ public class Restaurant implements Serializable {
 
     public Long getId() {
         return id;
+    }
+
+    public List<Review> getReviews() {
+        return reviews;
+    }
+
+    public void setReviews(List<Review> reviews) {
+        this.reviews = reviews;
     }
 
     public void setId(Long id) {
@@ -86,5 +97,21 @@ public class Restaurant implements Serializable {
 
     public void setAddress(Address address) {
         this.address = address;
+    }
+
+    public Double getRate() {
+        return rate;
+    }
+
+    public void setRate(Double rate) {
+        this.rate = rate;
+    }
+
+    public Integer getNumberRate() {
+        return numberRate;
+    }
+
+    public void setNumberRate(Integer numberRate) {
+        this.numberRate = numberRate;
     }
 }
